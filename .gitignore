@@ -1,0 +1,9 @@
+venv/
+.env
+__pycache__/
+data/temp/
+*.pptxvenv/
+.env
+__pycache__/
+.DS_Store
+data/temp/*
