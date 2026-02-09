@@ -44,10 +44,18 @@ if "level" not in st.session_state:
 if "feedback" not in st.session_state:
     st.session_state.feedback = None
 
-# Check API key
-api_key = os.getenv("ANTHROPIC_API_KEY")
-if not api_key:
-    st.error("⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+# Check Bedrock configuration
+bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
+if not bearer_token:
+    st.error("⚠️ AWS_BEARER_TOKEN_BEDROCK이 설정되지 않았습니다. 환경변수를 확인해주세요.")
+    st.info("""
+    **설정 방법 (Mac)**:
+    ```bash
+    export AWS_BEARER_TOKEN_BEDROCK="your-token"
+    export AWS_REGION="us-west-2"
+    export ANTHROPIC_MODEL="arn:aws:bedrock:..."
+    ```
+    """)
     st.stop()
 
 # ============================================
@@ -271,8 +279,13 @@ else:
                         for point in key_points:
                             st.markdown(f"• {point}")
                     elif slide["texts"]:
-                        for text in slide["texts"][:5]:
-                            st.markdown(f"- {text[:200]}{'...' if len(text) > 200 else ''}")
+                        # Show original text content without truncation
+                        for text in slide["texts"][:7]:
+                            # Display full text or truncate very long texts
+                            if len(text) > 500:
+                                st.markdown(f"- {text[:500]}...")
+                            else:
+                                st.markdown(f"- {text}")
                     else:
                         st.caption("텍스트 내용이 없습니다.")
 

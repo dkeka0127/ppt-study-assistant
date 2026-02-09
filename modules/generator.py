@@ -1,27 +1,115 @@
 """
 Content Generator Module
-- Generate summaries using Claude API
+- Generate summaries using Claude API via AWS Bedrock
 - Generate quizzes with various types and difficulty levels
 - Analyze images using Claude Vision
 """
 
 import json
 import os
+import base64
+import urllib.parse
 from typing import List, Dict, Any, Optional
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize Claude model
-def get_claude_model(model_name: str = "claude-sonnet-4-20250514"):
-    """Get Claude model instance."""
-    return ChatAnthropic(
-        model=model_name,
-        api_key=os.getenv("ANTHROPIC_API_KEY"),
-        max_tokens=4096
+
+def clean_json_response(response_text: str) -> str:
+    """
+    Clean JSON response by removing markdown code blocks and extra text.
+    """
+    text = response_text.strip()
+
+    # Remove markdown code blocks
+    if text.startswith("```json"):
+        text = text[7:]
+    elif text.startswith("```"):
+        text = text[3:]
+
+    if text.endswith("```"):
+        text = text[:-3]
+
+    # Find JSON object boundaries
+    text = text.strip()
+
+    # Try to find the start of JSON object or array
+    start_idx = -1
+    for i, char in enumerate(text):
+        if char in '{[':
+            start_idx = i
+            break
+
+    if start_idx == -1:
+        return text
+
+    # Find matching end bracket
+    bracket_count = 0
+    end_idx = len(text)
+    start_char = text[start_idx]
+    end_char = '}' if start_char == '{' else ']'
+
+    for i in range(start_idx, len(text)):
+        if text[i] == start_char:
+            bracket_count += 1
+        elif text[i] == end_char:
+            bracket_count -= 1
+            if bracket_count == 0:
+                end_idx = i + 1
+                break
+
+    return text[start_idx:end_idx]
+
+
+def invoke_bedrock_direct(messages: List[Dict], system_prompt: str = None, max_tokens: int = 4096) -> str:
+    """
+    Directly invoke Bedrock API with Bearer Token authentication.
+    """
+    region = os.getenv("AWS_REGION", "us-west-2")
+    model_id = os.getenv(
+        "ANTHROPIC_MODEL",
+        "arn:aws:bedrock:us-west-2:850995580124:application-inference-profile/v5nl2gv566vz"
     )
+    bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
+
+    # URL encode the model ID
+    encoded_model_id = urllib.parse.quote(model_id, safe='')
+    endpoint = f"https://bedrock-runtime.{region}.amazonaws.com/model/{encoded_model_id}/converse"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {bearer_token}"
+    }
+
+    body = {
+        "messages": messages,
+        "inferenceConfig": {
+            "maxTokens": max_tokens,
+            "temperature": 0.7
+        }
+    }
+
+    if system_prompt:
+        body["system"] = [{"text": system_prompt}]
+
+    try:
+        response = requests.post(endpoint, json=body, headers=headers, timeout=120)
+        response.raise_for_status()
+        result = response.json()
+        return result["output"]["message"]["content"][0]["text"]
+    except requests.exceptions.RequestException as e:
+        print(f"Bedrock API request error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response: {e.response.text}")
+        raise
+    except KeyError as e:
+        print(f"Bedrock API response parsing error: {e}")
+        print(f"Full response: {response.text if 'response' in dir() else 'No response'}")
+        raise
+    except Exception as e:
+        print(f"Bedrock API error: {e}")
+        raise
 
 
 def generate_summary(
@@ -38,8 +126,6 @@ def generate_summary(
     Returns:
         Summary dict with one_line, keywords, and slide_summaries
     """
-    model = get_claude_model()
-
     # Combine all text content
     all_text = []
     for slide in slides_data:
@@ -48,6 +134,10 @@ def generate_summary(
             all_text.append(f"[슬라이드 {slide['slide_num']}]\n" + "\n".join(texts))
 
     combined_text = "\n\n".join(all_text)
+
+    # Limit text length to avoid token limits
+    if len(combined_text) > 15000:
+        combined_text = combined_text[:15000] + "\n\n... (내용 생략)"
 
     system_prompt = f"""당신은 교육 콘텐츠 전문가입니다. 주어진 PPT 내용을 {level} 수준에 맞게 분석하고 요약해주세요.
 
@@ -69,19 +159,19 @@ def generate_summary(
     human_prompt = f"다음 PPT 내용을 분석해주세요:\n\n{combined_text}"
 
     try:
-        response = model.invoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=human_prompt)
-        ])
+        messages = [{"role": "user", "content": [{"text": human_prompt}]}]
+        response_text = invoke_bedrock_direct(messages, system_prompt)
 
-        # Parse JSON response
-        result = json.loads(response.content)
+        # Clean and parse JSON response
+        cleaned_json = clean_json_response(response_text)
+        result = json.loads(cleaned_json)
         return result
 
-    except json.JSONDecodeError:
-        # Fallback if JSON parsing fails
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {e}")
+        print(f"Response text: {response_text[:500] if 'response_text' in dir() else 'No response'}")
         return {
-            "one_line": "요약 생성 중 오류가 발생했습니다.",
+            "one_line": "요약 생성 중 JSON 파싱 오류가 발생했습니다.",
             "keywords": [],
             "slide_summaries": []
         }
@@ -99,7 +189,7 @@ def analyze_image(
     slide_context: str = ""
 ) -> str:
     """
-    Analyze an image using Claude Vision API.
+    Analyze an image using Claude Vision API via Bedrock.
 
     Args:
         image_data: Dict with base64 image and metadata
@@ -108,37 +198,65 @@ def analyze_image(
     Returns:
         Analysis text describing the image
     """
-    model = get_claude_model()
+    region = os.getenv("AWS_REGION", "us-west-2")
+    model_id = os.getenv(
+        "ANTHROPIC_MODEL",
+        "arn:aws:bedrock:us-west-2:850995580124:application-inference-profile/v5nl2gv566vz"
+    )
+    bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
 
+    # URL encode the model ID
+    encoded_model_id = urllib.parse.quote(model_id, safe='')
+    endpoint = f"https://bedrock-runtime.{region}.amazonaws.com/model/{encoded_model_id}/converse"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {bearer_token}"
+    }
+
+    # Build content with image
     content = []
 
-    # Add context if available
     if slide_context:
         content.append({
-            "type": "text",
             "text": f"이 슬라이드의 텍스트 내용: {slide_context}\n\n위 맥락을 참고하여 아래 이미지를 분석해주세요."
         })
 
-    # Add image
+    # Add image - Bedrock expects base64 decoded bytes
+    media_type = image_data.get("media_type", "image/png")
+    format_type = media_type.split("/")[-1]
+    if format_type == "jpg":
+        format_type = "jpeg"
+
+    # Decode base64 string to bytes for Bedrock
+    image_bytes = base64.b64decode(image_data["base64"])
+
     content.append({
-        "type": "image",
-        "source": {
-            "type": "base64",
-            "media_type": image_data.get("media_type", "image/png"),
-            "data": image_data["base64"]
+        "image": {
+            "format": format_type,
+            "source": {
+                "bytes": base64.b64encode(image_bytes).decode('utf-8')
+            }
         }
     })
 
     content.append({
-        "type": "text",
         "text": "이 이미지가 무엇을 나타내는지 학습에 도움이 되도록 설명해주세요. 그래프나 차트인 경우 수치와 트렌드를 해석해주세요."
     })
 
+    body = {
+        "messages": [{"role": "user", "content": content}],
+        "inferenceConfig": {
+            "maxTokens": 1024,
+            "temperature": 0.7
+        }
+    }
+
     try:
-        response = model.invoke([
-            HumanMessage(content=content)
-        ])
-        return response.content
+        response = requests.post(endpoint, json=body, headers=headers, timeout=60)
+        response.raise_for_status()
+        result = response.json()
+        return result["output"]["message"]["content"][0]["text"]
     except Exception as e:
         print(f"Error analyzing image: {e}")
         return f"이미지 분석 실패: {str(e)}"
@@ -170,8 +288,6 @@ def generate_quizzes(
             "essay": False
         }
 
-    model = get_claude_model()
-
     # Combine all text content
     all_text = []
     for slide in slides_data:
@@ -181,9 +297,12 @@ def generate_quizzes(
 
     combined_text = "\n\n".join(all_text)
 
+    # Limit text length
+    if len(combined_text) > 12000:
+        combined_text = combined_text[:12000] + "\n\n... (내용 생략)"
+
     # Determine question distribution
-    types_enabled = [k for k, v in include_types.items() if v]
-    questions_per_stage = num_questions // 3
+    questions_per_stage = max(num_questions // 3, 2)
 
     type_instructions = []
     if include_types.get("multiple_choice"):
@@ -214,22 +333,6 @@ def generate_quizzes(
                     "answer": 0,
                     "source_slide": 1,
                     "explanation": "해설"
-                }},
-                {{
-                    "id": 2,
-                    "type": "short_answer",
-                    "question": "문제 내용",
-                    "answer": "정답",
-                    "source_slide": 2,
-                    "explanation": "해설"
-                }},
-                {{
-                    "id": 3,
-                    "type": "fill_blank",
-                    "question": "____에 들어갈 말은?",
-                    "answer": "정답",
-                    "source_slide": 3,
-                    "explanation": "해설"
                 }}
             ]
         }},
@@ -249,17 +352,17 @@ def generate_quizzes(
 2. "어휘다지기"는 용어와 정의 중심, "실력다지기"는 개념 적용, "심화학습"은 종합적 사고력 문제입니다.
 3. 각 문제의 source_slide는 해당 내용이 나온 실제 슬라이드 번호를 정확히 기재하세요.
 4. multiple_choice의 answer는 정답 보기의 인덱스(0부터 시작)입니다.
-5. 반드시 유효한 JSON만 출력하세요."""
+5. 반드시 유효한 JSON만 출력하세요. 다른 텍스트는 절대 포함하지 마세요."""
 
     human_prompt = f"다음 PPT 내용을 바탕으로 총 {num_questions}개의 퀴즈를 생성해주세요:\n\n{combined_text}"
 
     try:
-        response = model.invoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=human_prompt)
-        ])
+        messages = [{"role": "user", "content": [{"text": human_prompt}]}]
+        response_text = invoke_bedrock_direct(messages, system_prompt, max_tokens=8000)
 
-        result = json.loads(response.content)
+        # Clean and parse JSON response
+        cleaned_json = clean_json_response(response_text)
+        result = json.loads(cleaned_json)
 
         # Assign sequential IDs
         question_id = 1
@@ -272,6 +375,7 @@ def generate_quizzes(
 
     except json.JSONDecodeError as e:
         print(f"JSON parsing error: {e}")
+        print(f"Response text: {response_text[:1000] if 'response_text' in dir() else 'No response'}")
         return get_fallback_quizzes()
     except Exception as e:
         print(f"Error generating quizzes: {e}")
@@ -319,8 +423,6 @@ def generate_feedback(
             "recommendations": []
         }
 
-    model = get_claude_model()
-
     # Prepare wrong answer summary
     wrong_summary = []
     for wa in wrong_answers:
@@ -329,7 +431,7 @@ def generate_feedback(
 문제: {q['question']}
 사용자 답변: {wa['user_answer']}
 정답: {wa['correct_answer']}
-출처: 슬라이드 {q['source_slide']}
+출처: 슬라이드 {q.get('source_slide', '?')}
 """)
 
     system_prompt = """당신은 학습 코치입니다. 사용자의 오답을 분석하고 개인화된 피드백을 제공해주세요.
@@ -352,12 +454,12 @@ def generate_feedback(
     human_prompt = f"다음 오답들을 분석해주세요:\n\n{''.join(wrong_summary)}"
 
     try:
-        response = model.invoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=human_prompt)
-        ])
+        messages = [{"role": "user", "content": [{"text": human_prompt}]}]
+        response_text = invoke_bedrock_direct(messages, system_prompt, max_tokens=2000)
 
-        return json.loads(response.content)
+        # Clean and parse JSON response
+        cleaned_json = clean_json_response(response_text)
+        return json.loads(cleaned_json)
 
     except Exception as e:
         print(f"Error generating feedback: {e}")
