@@ -283,9 +283,7 @@ def generate_quizzes(
     if include_types is None:
         include_types = {
             "multiple_choice": True,
-            "short_answer": True,
-            "fill_blank": True,
-            "essay": False
+            "short_answer": True
         }
 
     # Combine all text content
@@ -305,18 +303,44 @@ def generate_quizzes(
     questions_per_stage = max(num_questions // 3, 2)
 
     type_instructions = []
+    allowed_types = []
     if include_types.get("multiple_choice"):
-        type_instructions.append("- multiple_choice: 4지선다 객관식")
+        type_instructions.append("- multiple_choice: 4지선다 객관식 (options 배열 필수, answer는 정답 인덱스 0-3)")
+        allowed_types.append("multiple_choice")
     if include_types.get("short_answer"):
-        type_instructions.append("- short_answer: 단답형 (1-3단어)")
-    if include_types.get("fill_blank"):
-        type_instructions.append("- fill_blank: 빈칸 채우기")
-    if include_types.get("essay"):
-        type_instructions.append("- essay: 서술형")
+        type_instructions.append("- short_answer: 단답형 (answer는 정답 문자열, 1~3단어)")
+        allowed_types.append("short_answer")
+
+    # 선택된 유형에 따른 예시 생성
+    example_question = ""
+    if "multiple_choice" in allowed_types:
+        example_question = '''{
+                    "id": 1,
+                    "type": "multiple_choice",
+                    "question": "문제 내용",
+                    "options": ["보기1", "보기2", "보기3", "보기4"],
+                    "answer": 0,
+                    "source_slide": 1,
+                    "explanation": "해설"
+                }'''
+    elif "short_answer" in allowed_types:
+        example_question = '''{
+                    "id": 1,
+                    "type": "short_answer",
+                    "question": "~은(는) 무엇인가?",
+                    "answer": "정답",
+                    "source_slide": 1,
+                    "explanation": "해설"
+                }'''
+
+    allowed_types_str = ", ".join(allowed_types)
 
     system_prompt = f"""당신은 교육 평가 전문가입니다. 주어진 PPT 내용을 바탕으로 {level} 수준에 맞는 퀴즈를 생성해주세요.
 
-문제 유형:
+**중요: 반드시 다음 유형의 문제만 생성하세요: {allowed_types_str}**
+다른 유형의 문제는 절대 생성하지 마세요.
+
+허용된 문제 유형:
 {chr(10).join(type_instructions)}
 
 다음 JSON 형식으로 응답해주세요:
@@ -325,15 +349,7 @@ def generate_quizzes(
         {{
             "stage": "기초다지기",
             "questions": [
-                {{
-                    "id": 1,
-                    "type": "multiple_choice",
-                    "question": "문제 내용",
-                    "options": ["보기1", "보기2", "보기3", "보기4"],
-                    "answer": 0,
-                    "source_slide": 1,
-                    "explanation": "해설"
-                }}
+                {example_question}
             ]
         }},
         {{
@@ -349,10 +365,12 @@ def generate_quizzes(
 
 규칙:
 1. 각 단계별로 {questions_per_stage}개 이상의 문제를 생성하세요.
-2. "기초다지기"는 용어와 정의 중심, "실력다지기"는 개념 적용, "심화학습"은 종합적 사고력 문제입니다.
-3. 각 문제의 source_slide는 해당 내용이 나온 실제 슬라이드 번호를 정확히 기재하세요.
-4. multiple_choice의 answer는 정답 보기의 인덱스(0부터 시작)입니다.
-5. 반드시 유효한 JSON만 출력하세요. 다른 텍스트는 절대 포함하지 마세요."""
+2. **반드시 허용된 유형({allowed_types_str})만 사용하세요. 다른 유형 사용 금지!**
+3. "기초다지기"는 용어와 정의 중심, "실력다지기"는 개념 적용, "심화학습"은 종합적 사고력 문제입니다.
+4. 각 문제의 source_slide는 해당 내용이 나온 실제 슬라이드 번호를 정확히 기재하세요.
+5. multiple_choice만 options 배열이 필요합니다. short_answer는 options 없이 answer만 문자열로 작성하세요.
+6. short_answer의 answer는 1~3단어의 짧은 정답이어야 합니다.
+7. 반드시 유효한 JSON만 출력하세요. 다른 텍스트는 절대 포함하지 마세요."""
 
     human_prompt = f"다음 PPT 내용을 바탕으로 총 {num_questions}개의 퀴즈를 생성해주세요:\n\n{combined_text}"
 

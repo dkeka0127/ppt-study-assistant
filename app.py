@@ -247,10 +247,10 @@ if not st.session_state.processed:
         st.markdown("##### 생성되는 학습 자료")
         feat_cols = st.columns(4)
         features = [
-            ("Dashboard", "핵심 요약 & 분석"),
-            ("Quiz Zone", "맞춤형 퀴즈"),
-            ("Review Note", "오답 노트"),
-            ("AI Tutor", "실시간 Q&A")
+            ("📊 Dashboard", "핵심 요약 & 분석"),
+            ("✍️ Quiz Zone", "맞춤형 퀴즈"),
+            ("📝 Review Note", "오답 노트"),
+            ("🤖 AI Tutor", "실시간 Q&A")
         ]
         for i, (title, desc) in enumerate(features):
             with feat_cols[i]:
@@ -271,10 +271,8 @@ if not st.session_state.processed:
         num_questions = st.slider("문제 수", 5, 30, 10, 5)
 
         with st.expander("퀴즈 유형 선택", expanded=False):
-            include_multiple_choice = st.checkbox("객관식", value=True)
-            include_short_answer = st.checkbox("단답형", value=True)
-            include_fill_blank = st.checkbox("빈칸 채우기", value=True)
-            include_essay = st.checkbox("서술형", value=False)
+            include_multiple_choice = st.checkbox("객관식", value=True, help="4지선다 객관식")
+            include_short_answer = st.checkbox("단답형", value=True, help="1~3단어 짧은 답변")
 
         # Auto-process toggle
         st.session_state.auto_process = st.checkbox(
@@ -287,9 +285,7 @@ if not st.session_state.processed:
     if uploaded_file:
         include_types = {
             "multiple_choice": include_multiple_choice if 'include_multiple_choice' in dir() else True,
-            "short_answer": include_short_answer if 'include_short_answer' in dir() else True,
-            "fill_blank": include_fill_blank if 'include_fill_blank' in dir() else True,
-            "essay": include_essay if 'include_essay' in dir() else False
+            "short_answer": include_short_answer if 'include_short_answer' in dir() else True
         }
 
         if st.session_state.auto_process:
@@ -503,7 +499,8 @@ else:
                                                             })
                                                         st.rerun()
 
-                                elif q_type in ["short_answer", "fill_blank"]:
+                                elif q_type == "short_answer":
+                                    # 단답형: 간단한 입력 필드
                                     if q["id"] in st.session_state.quiz_answers:
                                         user_ans = st.session_state.quiz_answers[q["id"]]
                                         correct_ans = q.get("answer", "")
@@ -514,7 +511,7 @@ else:
                                     else:
                                         input_col, btn_col = st.columns([4, 1])
                                         with input_col:
-                                            user_answer = st.text_input("답변", key=q_key, label_visibility="collapsed", placeholder="답변 입력")
+                                            user_answer = st.text_input("답변", key=q_key, label_visibility="collapsed", placeholder="정답 입력")
                                         with btn_col:
                                             if st.button("제출", key=f"{q_key}_submit", use_container_width=True):
                                                 st.session_state.quiz_answers[q["id"]] = user_answer
@@ -527,15 +524,6 @@ else:
                                                     })
                                                 st.rerun()
 
-                                elif q_type == "essay":
-                                    if q["id"] in st.session_state.quiz_answers:
-                                        st.success("답변 제출 완료")
-                                        st.text_area("제출된 답변", value=st.session_state.quiz_answers[q["id"]], disabled=True, height=80)
-                                    else:
-                                        user_answer = st.text_area("답변 작성", key=q_key, height=100, label_visibility="collapsed")
-                                        if st.button("제출", key=f"{q_key}_submit"):
-                                            st.session_state.quiz_answers[q["id"]] = user_answer
-                                            st.rerun()
 
                                 st.markdown("---")
 
