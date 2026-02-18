@@ -1,0 +1,590 @@
+{
+  "timestamp": "2026-02-18T12:41:52.655Z",
+  "reason": "compaction",
+  "status": {
+    "version": "2.0",
+    "lastUpdated": "2026-02-18T12:41:52.437Z",
+    "activeFeatures": [
+      "ppt-parser",
+      "ppt-study-assistant",
+      "generator.py",
+      "config"
+    ],
+    "primaryFeature": "ppt-parser",
+    "features": {
+      "ppt-parser": {
+        "phase": "design",
+        "startedAt": "2026-02-18T05:00:00.000Z",
+        "planPath": "docs/01-plan/features/ppt-parser.plan.md",
+        "designPath": "docs/02-design/features/ppt-parser.design.md",
+        "matchRate": null,
+        "iterationCount": 0
+      },
+      "ppt-study-assistant": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-02-18T09:15:06.057Z",
+          "lastUpdated": "2026-02-18T12:41:52.437Z"
+        },
+        "lastFile": "/Users/sori/dev/skillup/ppt-study-assistant/app.py"
+      },
+      "generator.py": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-02-18T09:15:31.967Z",
+          "lastUpdated": "2026-02-18T10:52:43.860Z"
+        },
+        "lastFile": "/Users/sori/dev/skillup/ppt-study-assistant/modules/generator.py"
+      },
+      "config": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-02-18T12:38:31.459Z",
+          "lastUpdated": "2026-02-18T12:41:16.819Z"
+        },
+        "lastFile": "/Users/sori/dev/skillup/ppt-study-assistant/config/__init__.py"
+      }
+    },
+    "pipeline": {
+      "currentPhase": 1,
+      "level": "Dynamic",
+      "phaseHistory": []
+    },
+    "session": {
+      "startedAt": "2026-02-18T04:03:29.306Z",
+      "onboardingCompleted": false,
+      "lastActivity": "2026-02-18T12:41:52.437Z"
+    },
+    "history": [
+      {
+        "action": "plan_created",
+        "feature": "ppt-parser",
+        "timestamp": "2026-02-18T05:00:00.000Z"
+      },
+      {
+        "action": "design_created",
+        "feature": "ppt-parser",
+        "timestamp": "2026-02-18T05:10:00.000Z"
+      },
+      {
+        "timestamp": "2026-02-18T09:15:06.058Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:15:31.967Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:15:38.374Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:26:15.746Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:26:20.609Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:26:27.178Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:26:32.355Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:26:38.607Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:26:53.677Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:27:05.250Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:27:14.391Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:27:30.296Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:27:41.696Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:27:50.563Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:28:02.665Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:45:17.429Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:45:23.504Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:45:33.837Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:45:43.513Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:47:13.252Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:47:22.710Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:47:40.594Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:53:47.480Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:54:33.974Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:54:46.722Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T09:54:57.804Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:15:13.924Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:15:38.778Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:16:39.098Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:17:02.319Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:17:12.676Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:17:35.270Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:18:23.183Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:18:47.700Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:19:40.846Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:26:59.329Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:27:17.085Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:27:36.301Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:31:11.771Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:33:56.792Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:41:18.617Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:42:22.596Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:43:00.711Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:43:35.239Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:43:51.719Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:44:07.947Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:50:26.128Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:50:44.960Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:51:37.719Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:51:47.758Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:52:22.159Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:52:43.860Z",
+        "feature": "generator.py",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:56:36.306Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T10:58:06.251Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:02:02.255Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:03:14.330Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:03:54.095Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:22:55.292Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:23:09.535Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:25:16.439Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:26:20.482Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:32:20.212Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:34:21.020Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:34:34.959Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:35:05.194Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:39:04.409Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T11:56:22.456Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:02:32.751Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:09:07.893Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:11:28.106Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:16:29.794Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:31:27.734Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:33:10.905Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:34:30.026Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:38:31.459Z",
+        "feature": "config",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:39:08.902Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:39:27.349Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:39:58.207Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:40:51.940Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:41:06.392Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:41:11.817Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:41:16.819Z",
+        "feature": "config",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:41:22.099Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-18T12:41:52.437Z",
+        "feature": "ppt-study-assistant",
+        "phase": "do",
+        "action": "updated"
+      }
+    ]
+  }
+}

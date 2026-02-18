@@ -1,21 +1,20 @@
+"""Smart Study Assistant - 메인 애플리케이션"""
+
 import streamlit as st
 import os
-from io import BytesIO
 from dotenv import load_dotenv
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 # Load environment variables
 load_dotenv()
 
 # Import custom modules
-from modules.parser import extract_slide_content, get_all_text_content
-from modules.generator import generate_summary, generate_quizzes, analyze_image, generate_feedback
-from modules.chatbot import get_tutor_response, format_ppt_for_context
+from modules.parser import extract_slide_content
+from modules.generator import generate_summary, generate_quizzes, analyze_image
+from modules.chatbot import format_ppt_for_context
+
+# Import components
+from components import render_dashboard, render_quiz, render_review, render_tutor
+from config import CUSTOM_CSS
 
 # Page configuration
 st.set_page_config(
@@ -25,280 +24,44 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for PC optimization
-st.markdown("""
-<style>
-    /* Main container optimization */
-    .main .block-container {
-        max-width: 1400px;
-        padding: 1rem 2rem;
-    }
-
-    /* Card style for sections */
-    .stExpander {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Button styling */
-    .stButton > button {
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    /* Quiz button styling */
-    .quiz-btn {
-        width: 100%;
-        padding: 0.6rem 1rem;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: 1rem;
-        border: 1px solid rgba(49, 51, 63, 0.2);
-        background-color: white;
-        color: rgb(49, 51, 63);
-        cursor: default;
-    }
-    .quiz-btn.correct {
-        background-color: #d4edda;
-        border-color: #28a745;
-        color: #155724;
-    }
-    .quiz-btn.wrong {
-        background-color: #f8d7da;
-        border-color: #dc3545;
-        color: #721c24;
-    }
-
-    /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        padding: 16px 32px;
-        border-radius: 8px 8px 0 0;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    /* Metric cards */
-    [data-testid="stMetric"] {
-        background: #fff8e6;
-        border: 1px solid #ffe4a0;
-        padding: 0.8rem;
-        border-radius: 10px;
-    }
-
-    [data-testid="stMetric"] label {
-        color: #666666 !important;
-        font-size: 0.85rem !important;
-    }
-
-    [data-testid="stMetric"] [data-testid="stMetricValue"] {
-        color: #333333 !important;
-        font-weight: 600 !important;
-        font-size: 1.2rem !important;
-    }
-
-    /* Progress bar */
-    .stProgress > div > div {
-        background: linear-gradient(90deg, #667eea, #764ba2);
-    }
-
-    /* Chat messages */
-    .stChatMessage {
-        border-radius: 12px;
-        margin: 0.5rem 0;
-    }
-
-    /* File uploader */
-    [data-testid="stFileUploader"] {
-        border: 2px dashed #667eea;
-        border-radius: 12px;
-        padding: 1rem;
-    }
-
-    /* Hide sidebar toggle on PC */
-    @media (min-width: 1024px) {
-        [data-testid="collapsedControl"] {
-            display: none;
-        }
-    }
-
-    /* Quick stats bar */
-    .quick-stats {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Apply custom CSS
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
 # ============================================
-# PDF Generation Function
+# Session State 초기화
 # ============================================
-def generate_exam_pdf(quizzes, title, include_answers=False):
-    """Generate exam PDF from quizzes"""
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=20*mm,
-        leftMargin=20*mm,
-        topMargin=20*mm,
-        bottomMargin=20*mm
-    )
-
-    # 프로젝트 폴더 내의 폰트 파일 사용
-    font_path = os.path.join(os.path.dirname(__file__), "fonts", "ArialUnicode.ttf")
-
-    if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('Korean', font_path))
-        font_name = 'Korean'
-    else:
-        font_name = 'Helvetica'
-
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(
-        name='KoreanTitle',
-        fontName=font_name,
-        fontSize=18,
-        leading=24,
-        spaceAfter=12,
-        alignment=1  # Center
-    ))
-    styles.add(ParagraphStyle(
-        name='KoreanHeading',
-        fontName=font_name,
-        fontSize=14,
-        leading=20,
-        spaceAfter=10,
-        spaceBefore=15
-    ))
-    styles.add(ParagraphStyle(
-        name='KoreanBody',
-        fontName=font_name,
-        fontSize=11,
-        leading=16,
-        spaceAfter=6
-    ))
-    styles.add(ParagraphStyle(
-        name='KoreanOption',
-        fontName=font_name,
-        fontSize=10,
-        leading=14,
-        leftIndent=20,
-        spaceAfter=3
-    ))
-    styles.add(ParagraphStyle(
-        name='KoreanAnswer',
-        fontName=font_name,
-        fontSize=10,
-        leading=14,
-        textColor='blue'
-    ))
-
-    story = []
-
-    # Title
-    story.append(Paragraph("시험지", styles['KoreanTitle']))
-    if title:
-        story.append(Paragraph(title, styles['KoreanBody']))
-    story.append(Spacer(1, 10*mm))
-
-    # Name field
-    story.append(Paragraph("이름: ___________________    날짜: ___________________", styles['KoreanBody']))
-    story.append(Spacer(1, 10*mm))
-
-    # Questions
-    q_num = 1
-    for stage in quizzes:
-        stage_name = stage.get("stage", "")
-        if stage_name:
-            story.append(Paragraph(f"[ {stage_name} ]", styles['KoreanHeading']))
-
-        for q in stage.get("questions", []):
-            q_type = q.get("type", "short_answer")
-            question_text = q.get("question", "")
-
-            # Question
-            story.append(Paragraph(f"{q_num}. {question_text}", styles['KoreanBody']))
-
-            if q_type == "multiple_choice":
-                options = q.get("options", [])
-                for idx, opt in enumerate(options):
-                    option_label = chr(ord('①') + idx)
-                    story.append(Paragraph(f"{option_label} {opt}", styles['KoreanOption']))
-
-                if include_answers:
-                    answer_idx = q.get("answer", 0)
-                    answer_label = chr(ord('①') + answer_idx)
-                    story.append(Paragraph(f"정답: {answer_label}", styles['KoreanAnswer']))
-
-            elif q_type == "short_answer":
-                story.append(Paragraph("답: _______________________________", styles['KoreanOption']))
-                if include_answers:
-                    story.append(Paragraph(f"정답: {q.get('answer', '')}", styles['KoreanAnswer']))
-
-            story.append(Spacer(1, 3*mm))
-            q_num += 1
-
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
+def init_session_state():
+    """Session state 초기화"""
+    defaults = {
+        "processed": False,
+        "slides_data": [],
+        "summary": None,
+        "quizzes": [],
+        "quiz_answers": {},
+        "quiz_submitted": False,
+        "wrong_answers": [],
+        "chat_history": [],
+        "current_quiz_stage": 0,
+        "ppt_context": "",
+        "level": "대학생",
+        "feedback": None,
+        "auto_process": True,
+        "show_settings": False
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
 
-# Initialize session state
-if "processed" not in st.session_state:
-    st.session_state.processed = False
-if "slides_data" not in st.session_state:
-    st.session_state.slides_data = []
-if "summary" not in st.session_state:
-    st.session_state.summary = None
-if "quizzes" not in st.session_state:
-    st.session_state.quizzes = []
-if "quiz_answers" not in st.session_state:
-    st.session_state.quiz_answers = {}
-if "quiz_submitted" not in st.session_state:
-    st.session_state.quiz_submitted = False
-if "wrong_answers" not in st.session_state:
-    st.session_state.wrong_answers = []
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-if "current_quiz_stage" not in st.session_state:
-    st.session_state.current_quiz_stage = 0
-if "ppt_context" not in st.session_state:
-    st.session_state.ppt_context = ""
-if "level" not in st.session_state:
-    st.session_state.level = "대학생"
-if "feedback" not in st.session_state:
-    st.session_state.feedback = None
-if "auto_process" not in st.session_state:
-    st.session_state.auto_process = True
-if "show_settings" not in st.session_state:
-    st.session_state.show_settings = False
-
-# Check Bedrock configuration
-bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
-if not bearer_token:
-    st.error("AWS_BEARER_TOKEN_BEDROCK이 설정되지 않았습니다.")
-    with st.expander("설정 방법 보기"):
-        st.code("""
-export AWS_BEARER_TOKEN_BEDROCK="your-token"
-export AWS_REGION="us-west-2"
-export ANTHROPIC_MODEL="arn:aws:bedrock:..."
-        """, language="bash")
-    st.stop()
+init_session_state()
 
 
 # ============================================
-# Helper function for processing
+# PPT 처리 함수
 # ============================================
 def process_ppt(uploaded_file, level, num_questions, include_types):
-    """Process PPT file and generate study materials"""
+    """PPT 파일 처리 및 학습 자료 생성"""
     # Reset previous state
     st.session_state.quiz_answers = {}
     st.session_state.wrong_answers = []
@@ -314,12 +77,11 @@ def process_ppt(uploaded_file, level, num_questions, include_types):
         # Step 1: Parse PPT
         status_text.text("PPT 파일 분석 중...")
         progress_bar.progress(10)
-
         slides_data = extract_slide_content(uploaded_file)
         st.session_state.slides_data = slides_data
         progress_bar.progress(30)
 
-        # Step 2: Analyze images (if any)
+        # Step 2: Analyze images
         status_text.text("이미지 분석 중...")
         for slide in slides_data:
             if slide.get("images"):
@@ -357,11 +119,27 @@ def process_ppt(uploaded_file, level, num_questions, include_types):
         status_text.empty()
         return False
 
+
 # ============================================
-# MAIN PANEL
+# 환경 설정 체크
+# ============================================
+bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
+if not bearer_token:
+    st.error("AWS_BEARER_TOKEN_BEDROCK이 설정되지 않았습니다.")
+    with st.expander("설정 방법 보기"):
+        st.code("""
+export AWS_BEARER_TOKEN_BEDROCK="your-token"
+export AWS_REGION="us-west-2"
+export ANTHROPIC_MODEL="arn:aws:bedrock:..."
+        """, language="bash")
+    st.stop()
+
+
+# ============================================
+# 메인 UI
 # ============================================
 
-# Header with title and quick actions
+# Header
 header_col1, header_col2 = st.columns([3, 1])
 with header_col1:
     st.title("Smart Study Assistant")
@@ -374,13 +152,13 @@ with header_col2:
             st.session_state.quizzes = []
             st.rerun()
 
+
 # ============================================
-# NOT PROCESSED: Upload & Settings View
+# 업로드 화면 (처리 전)
 # ============================================
 if not st.session_state.processed:
     st.markdown("AI 기반 PPT 학습 도우미 - 파일을 업로드하면 자동으로 학습 자료가 생성됩니다.")
 
-    # Main upload area with settings
     upload_col, settings_col = st.columns([2, 1])
 
     with upload_col:
@@ -392,7 +170,7 @@ if not st.session_state.processed:
             label_visibility="collapsed"
         )
 
-        # Feature preview cards
+        # Feature preview
         st.markdown("---")
         st.markdown("##### 생성되는 학습 자료")
         feat_cols = st.columns(4)
@@ -409,29 +187,24 @@ if not st.session_state.processed:
 
     with settings_col:
         st.subheader("학습 설정")
-
-        # Level selector
         level = st.selectbox(
             "난이도",
             options=["중학생", "고등학생", "대학생", "전문가"],
             index=2
         )
-
-        # Quiz settings
         num_questions = st.slider("문제 수", 5, 30, 10, 5)
 
         with st.expander("퀴즈 유형 선택", expanded=False):
             include_multiple_choice = st.checkbox("객관식", value=True, help="4지선다 객관식")
             include_short_answer = st.checkbox("단답형", value=True, help="1~3단어 짧은 답변")
 
-        # Auto-process toggle
         st.session_state.auto_process = st.checkbox(
             "자동 생성",
             value=True,
             help="파일 업로드 시 자동으로 학습 자료 생성"
         )
 
-    # Process when file is uploaded
+    # Process file
     if uploaded_file:
         include_types = {
             "multiple_choice": include_multiple_choice if 'include_multiple_choice' in dir() else True,
@@ -439,18 +212,17 @@ if not st.session_state.processed:
         }
 
         if st.session_state.auto_process:
-            # Auto process
             with st.container():
                 if process_ppt(uploaded_file, level, num_questions, include_types):
                     st.rerun()
         else:
-            # Manual process button
             if st.button("학습 자료 생성", type="primary", use_container_width=True):
                 if process_ppt(uploaded_file, level, num_questions, include_types):
                     st.rerun()
 
+
 # ============================================
-# PROCESSED: Main Study View
+# 학습 화면 (처리 후)
 # ============================================
 else:
     # Quick Stats Bar
@@ -481,359 +253,14 @@ else:
         "AI Tutor"
     ])
 
-    # ============================================
-    # TAB 1: Dashboard (학습자료 요약)
-    # ============================================
     with tab1:
-        # Two-column layout for dashboard
-        dash_left, dash_right = st.columns([2, 1])
+        render_dashboard()
 
-        with dash_left:
-            st.subheader("전체 요약")
-            st.info(st.session_state.summary.get("one_line", "요약 정보가 없습니다."))
-
-            # Slide-by-slide Cards
-            st.subheader("슬라이드별 분석")
-
-            # Get slide summaries from summary data
-            slide_summaries = {
-                s["slide_num"]: s
-                for s in st.session_state.summary.get("slide_summaries", [])
-            }
-
-            for slide in st.session_state.slides_data:
-                slide_num = slide["slide_num"]
-                slide_summary = slide_summaries.get(slide_num, {})
-                title = slide_summary.get("title", f"슬라이드 {slide_num}")
-
-                with st.expander(f"Slide #{slide_num}: {title}", expanded=False):
-                    col1, col2 = st.columns([1, 1])
-
-                    with col1:
-                        st.markdown("**핵심 내용**")
-                        key_points = slide_summary.get("key_points", [])
-                        if key_points:
-                            for point in key_points:
-                                st.markdown(f"- {point}")
-                        elif slide["texts"]:
-                            for text in slide["texts"][:5]:
-                                display_text = text[:300] + "..." if len(text) > 300 else text
-                                st.markdown(f"- {display_text}")
-                        else:
-                            st.caption("텍스트 내용이 없습니다.")
-
-                    with col2:
-                        st.markdown("**Vision AI 분석**")
-                        if slide.get("vision_analysis"):
-                            st.markdown(slide["vision_analysis"])
-                        else:
-                            st.caption("이미지 분석 결과가 없습니다.")
-
-                        if slide.get("images"):
-                            st.caption(f"이미지 {len(slide['images'])}개 포함")
-
-        with dash_right:
-            # Keywords section
-            st.subheader("핵심 키워드")
-            keywords = st.session_state.summary.get("keywords", [])
-            if keywords:
-                for kw in keywords:
-                    st.markdown(f"`{kw}`")
-            else:
-                st.caption("키워드가 없습니다.")
-
-            if st.session_state.wrong_answers:
-                st.markdown("---")
-                st.warning(f"오답 {len(st.session_state.wrong_answers)}개가 있습니다.")
-
-            # 시험지 생성
-            st.markdown("---")
-            st.subheader("시험지 생성")
-
-            include_answers = st.checkbox("정답지 포함", value=False)
-
-            if st.button("PDF 시험지 생성", use_container_width=True, type="primary"):
-                pdf_buffer = generate_exam_pdf(
-                    st.session_state.quizzes,
-                    st.session_state.summary.get("one_line", ""),
-                    include_answers
-                )
-                st.download_button(
-                    label="시험지 다운로드",
-                    data=pdf_buffer,
-                    file_name="exam_sheet.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-
-    # ============================================
-    # TAB 2: Quiz Zone (학습 확인)
-    # ============================================
     with tab2:
-        if not st.session_state.quizzes or all(len(stage.get("questions", [])) == 0 for stage in st.session_state.quizzes):
-            st.warning("퀴즈가 생성되지 않았습니다. PPT 내용이 충분한지 확인해주세요.")
-        else:
-            # Two-column layout: Quiz on left, Progress on right
-            quiz_col, progress_col = st.columns([3, 1])
+        render_quiz()
 
-            stages = ["기초다지기", "실력다지기", "심화학습"]
-            current_stage = st.session_state.current_quiz_stage
-
-            with progress_col:
-                st.subheader("학습 단계")
-                for i, stage in enumerate(stages):
-                    if i < current_stage:
-                        st.success(f"완료: {stage}")
-                    elif i == current_stage:
-                        st.info(f"진행중: {stage}")
-                    else:
-                        st.markdown(f"대기: {stage}")
-
-                st.markdown("---")
-
-                # Stage navigation
-                nav_col1, nav_col2 = st.columns(2)
-                with nav_col1:
-                    if current_stage > 0:
-                        if st.button("이전", use_container_width=True):
-                            st.session_state.current_quiz_stage -= 1
-                            st.rerun()
-                with nav_col2:
-                    if current_stage < len(stages) - 1:
-                        if st.button("다음", use_container_width=True):
-                            st.session_state.current_quiz_stage += 1
-                            st.rerun()
-
-            with quiz_col:
-                if current_stage < len(st.session_state.quizzes):
-                    stage_data = st.session_state.quizzes[current_stage]
-                    questions = stage_data.get("questions", [])
-
-                    if not questions:
-                        st.info(f"'{stage_data.get('stage', stages[current_stage])}' 단계에 문제가 없습니다.")
-                    else:
-                        # Progress Bar
-                        total_q = len(questions)
-                        answered_q = sum(1 for q in questions if q["id"] in st.session_state.quiz_answers)
-                        st.progress(answered_q / total_q if total_q > 0 else 0)
-                        st.caption(f"진행: {answered_q}/{total_q}")
-
-                        # Questions in card-style
-                        for q in questions:
-                            with st.container():
-                                q_header_col, q_source_col = st.columns([4, 1])
-                                with q_header_col:
-                                    st.markdown(f"**Q{q['id']}** {q['question']}")
-                                with q_source_col:
-                                    st.caption(f"Slide #{q.get('source_slide', '?')}")
-
-                                q_key = f"q_{q['id']}"
-                                q_type = q.get("type", "short_answer")
-
-                                if q_type == "multiple_choice":
-                                    options = q.get("options", [])
-                                    if options:
-                                        selected = st.session_state.quiz_answers.get(q["id"])
-                                        cols = st.columns(len(options))
-                                        for i, option in enumerate(options):
-                                            with cols[i]:
-                                                if selected is not None:
-                                                    if i == q.get("answer"):
-                                                        st.markdown(f'''<button class="quiz-btn correct" disabled>{option}</button>''', unsafe_allow_html=True)
-                                                    elif selected == i:
-                                                        st.markdown(f'''<button class="quiz-btn wrong" disabled>{option}</button>''', unsafe_allow_html=True)
-                                                    else:
-                                                        st.markdown(f'''<button class="quiz-btn" disabled>{option}</button>''', unsafe_allow_html=True)
-                                                else:
-                                                    if st.button(option, key=f"{q_key}_opt_{i}", use_container_width=True):
-                                                        st.session_state.quiz_answers[q["id"]] = i
-                                                        if i != q.get("answer"):
-                                                            st.session_state.wrong_answers.append({
-                                                                "question": q,
-                                                                "user_answer": option,
-                                                                "correct_answer": options[q.get("answer", 0)]
-                                                            })
-                                                        st.rerun()
-
-                                elif q_type == "short_answer":
-                                    # 단답형: 간단한 입력 필드
-                                    if q["id"] in st.session_state.quiz_answers:
-                                        user_ans = st.session_state.quiz_answers[q["id"]]
-                                        correct_ans = q.get("answer", "")
-                                        if user_ans.strip().lower() == correct_ans.strip().lower():
-                                            st.success(f"정답: {user_ans}")
-                                        else:
-                                            st.error(f"오답 - 내 답변: {user_ans} / 정답: {correct_ans}")
-                                    else:
-                                        input_col, btn_col = st.columns([4, 1])
-                                        with input_col:
-                                            user_answer = st.text_input("답변", key=q_key, label_visibility="collapsed", placeholder="정답 입력")
-                                        with btn_col:
-                                            if st.button("제출", key=f"{q_key}_submit", use_container_width=True):
-                                                st.session_state.quiz_answers[q["id"]] = user_answer
-                                                correct_ans = q.get("answer", "")
-                                                if user_answer.strip().lower() != correct_ans.strip().lower():
-                                                    st.session_state.wrong_answers.append({
-                                                        "question": q,
-                                                        "user_answer": user_answer,
-                                                        "correct_answer": correct_ans
-                                                    })
-                                                st.rerun()
-
-
-                                st.markdown("---")
-
-                else:
-                    st.success("모든 퀴즈를 완료했습니다!")
-                    reset_col1, reset_col2 = st.columns([1, 3])
-                    with reset_col1:
-                        if st.button("다시 풀기", type="primary"):
-                            st.session_state.current_quiz_stage = 0
-                            st.session_state.quiz_answers = {}
-                            st.session_state.wrong_answers = []
-                            st.session_state.feedback = None
-                            st.rerun()
-
-    # ============================================
-    # TAB 3: Review Note (오답 노트 & 피드백)
-    # ============================================
     with tab3:
-        if not st.session_state.wrong_answers:
-            st.success("오답이 없습니다!")
-        else:
-            # Two-column layout
-            review_left, review_right = st.columns([2, 1])
+        render_review()
 
-            with review_right:
-                st.subheader("학습 통계")
-
-                # Statistics
-                total_q = sum(len(stage.get("questions", [])) for stage in st.session_state.quizzes)
-                answered = len(st.session_state.quiz_answers)
-                wrong_count = len(st.session_state.wrong_answers)
-
-                st.metric("오답 수", wrong_count)
-                if answered > 0:
-                    accuracy = ((answered - wrong_count) / answered * 100)
-                    st.metric("정답률", f"{accuracy:.1f}%")
-
-                st.markdown("---")
-
-                # AI feedback button
-                if st.session_state.feedback is None:
-                    if st.button("AI 취약점 분석", type="primary", use_container_width=True):
-                        with st.spinner("학습 패턴 분석 중..."):
-                            feedback = generate_feedback(
-                                st.session_state.wrong_answers,
-                                st.session_state.slides_data
-                            )
-                            st.session_state.feedback = feedback
-                        st.rerun()
-
-                # Show AI Feedback if available
-                if st.session_state.feedback:
-                    st.subheader("AI 분석 결과")
-                    feedback = st.session_state.feedback
-                    st.info(feedback.get("analysis", ""))
-
-                    weak_areas = feedback.get("weak_areas", [])
-                    if weak_areas:
-                        st.markdown("**취약 영역**")
-                        for area in weak_areas:
-                            st.warning(area.get("area", "영역"))
-                            st.caption(area.get("description", ""))
-
-                    recommendations = feedback.get("recommendations", [])
-                    if recommendations:
-                        st.markdown("**학습 추천**")
-                        for rec in recommendations:
-                            st.markdown(f"- {rec}")
-
-            with review_left:
-                st.subheader("오답 목록")
-
-                for i, wrong in enumerate(st.session_state.wrong_answers):
-                    q = wrong["question"]
-                    with st.expander(f"Q{q['id']}: {q['question'][:60]}...", expanded=(i == 0)):
-                        ans_col1, ans_col2 = st.columns(2)
-
-                        with ans_col1:
-                            st.markdown("**내 답변**")
-                            st.error(wrong["user_answer"])
-
-                        with ans_col2:
-                            st.markdown("**정답**")
-                            st.success(wrong["correct_answer"])
-
-                        # AI Explanation
-                        st.markdown("**해설**")
-                        st.info(q.get("explanation", "해설이 없습니다."))
-
-                        st.caption(f"출처: Slide #{q.get('source_slide', '?')}")
-
-    # ============================================
-    # TAB 4: AI Tutor (실시간 Q&A)
-    # ============================================
     with tab4:
-        # Two-column layout
-        tutor_left, tutor_right = st.columns([3, 1])
-
-        with tutor_right:
-            st.subheader("추천 질문")
-            suggested_questions = [
-                "핵심 개념 정리해줘",
-                "시험 포인트 3가지",
-                "쉽게 설명해줘",
-                "예시를 들어줘"
-            ]
-
-            for sq in suggested_questions:
-                if st.button(sq, key=f"suggested_{sq}", use_container_width=True):
-                    st.session_state.chat_history.append({"role": "user", "content": sq})
-                    with st.spinner("답변 생성 중..."):
-                        response = get_tutor_response(
-                            sq,
-                            st.session_state.ppt_context,
-                            st.session_state.chat_history[:-1],
-                            st.session_state.level
-                        )
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "content": response
-                    })
-                    st.rerun()
-
-            st.markdown("---")
-
-            if st.session_state.chat_history:
-                if st.button("대화 지우기", use_container_width=True):
-                    st.session_state.chat_history = []
-                    st.rerun()
-
-        with tutor_left:
-            # Chat container with fixed height
-            chat_container = st.container(height=500)
-            with chat_container:
-                if not st.session_state.chat_history:
-                    st.markdown("PPT 내용에 대해 궁금한 점을 질문하세요.")
-                else:
-                    for msg in st.session_state.chat_history:
-                        if msg["role"] == "user":
-                            st.chat_message("user").write(msg["content"])
-                        else:
-                            st.chat_message("assistant").write(msg["content"])
-
-            # Chat Input
-            user_input = st.chat_input("질문을 입력하세요...")
-
-            if user_input:
-                st.session_state.chat_history.append({"role": "user", "content": user_input})
-                with st.spinner("답변 생성 중..."):
-                    response = get_tutor_response(
-                        user_input,
-                        st.session_state.ppt_context,
-                        st.session_state.chat_history[:-1],
-                        st.session_state.level
-                    )
-                st.session_state.chat_history.append({"role": "assistant", "content": response})
-                st.rerun()
+        render_tutor()
