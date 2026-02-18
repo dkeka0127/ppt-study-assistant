@@ -72,28 +72,33 @@ st.markdown("""
 
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 12px;
     }
 
     .stTabs [data-baseweb="tab"] {
-        padding: 12px 24px;
+        padding: 16px 32px;
         border-radius: 8px 8px 0 0;
+        font-size: 1.1rem;
+        font-weight: 600;
     }
 
     /* Metric cards */
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1rem;
+        background: #fff8e6;
+        border: 1px solid #ffe4a0;
+        padding: 0.8rem;
         border-radius: 10px;
-        color: white;
     }
 
     [data-testid="stMetric"] label {
-        color: rgba(255,255,255,0.8) !important;
+        color: #666666 !important;
+        font-size: 0.85rem !important;
     }
 
     [data-testid="stMetric"] [data-testid="stMetricValue"] {
-        color: white !important;
+        color: #333333 !important;
+        font-weight: 600 !important;
+        font-size: 1.2rem !important;
     }
 
     /* Progress bar */
@@ -695,7 +700,6 @@ else:
     with tab3:
         if not st.session_state.wrong_answers:
             st.success("오답이 없습니다!")
-            st.balloons()
         else:
             # Two-column layout
             review_left, review_right = st.columns([2, 1])
