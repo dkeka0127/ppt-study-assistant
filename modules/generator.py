@@ -323,7 +323,7 @@ def generate_quizzes(
 {{
     "stages": [
         {{
-            "stage": "어휘다지기",
+            "stage": "기초다지기",
             "questions": [
                 {{
                     "id": 1,
@@ -349,7 +349,7 @@ def generate_quizzes(
 
 규칙:
 1. 각 단계별로 {questions_per_stage}개 이상의 문제를 생성하세요.
-2. "어휘다지기"는 용어와 정의 중심, "실력다지기"는 개념 적용, "심화학습"은 종합적 사고력 문제입니다.
+2. "기초다지기"는 용어와 정의 중심, "실력다지기"는 개념 적용, "심화학습"은 종합적 사고력 문제입니다.
 3. 각 문제의 source_slide는 해당 내용이 나온 실제 슬라이드 번호를 정확히 기재하세요.
 4. multiple_choice의 answer는 정답 보기의 인덱스(0부터 시작)입니다.
 5. 반드시 유효한 JSON만 출력하세요. 다른 텍스트는 절대 포함하지 마세요."""
@@ -386,7 +386,7 @@ def get_fallback_quizzes() -> List[Dict[str, Any]]:
     """Return fallback quizzes when generation fails."""
     return [
         {
-            "stage": "어휘다지기",
+            "stage": "기초다지기",
             "questions": [{
                 "id": 1,
                 "type": "multiple_choice",
