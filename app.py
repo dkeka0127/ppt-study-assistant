@@ -40,6 +40,29 @@ st.markdown("""
         font-weight: 500;
     }
 
+    /* Quiz button styling */
+    .quiz-btn {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 1rem;
+        border: 1px solid rgba(49, 51, 63, 0.2);
+        background-color: white;
+        color: rgb(49, 51, 63);
+        cursor: default;
+    }
+    .quiz-btn.correct {
+        background-color: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+    }
+    .quiz-btn.wrong {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+        color: #721c24;
+    }
+
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
@@ -483,11 +506,11 @@ else:
                                             with cols[i]:
                                                 if selected is not None:
                                                     if i == q.get("answer"):
-                                                        st.success(option)
+                                                        st.markdown(f'''<button class="quiz-btn correct" disabled>{option}</button>''', unsafe_allow_html=True)
                                                     elif selected == i:
-                                                        st.error(option)
+                                                        st.markdown(f'''<button class="quiz-btn wrong" disabled>{option}</button>''', unsafe_allow_html=True)
                                                     else:
-                                                        st.button(option, key=f"{q_key}_opt_{i}", disabled=True)
+                                                        st.markdown(f'''<button class="quiz-btn" disabled>{option}</button>''', unsafe_allow_html=True)
                                                 else:
                                                     if st.button(option, key=f"{q_key}_opt_{i}", use_container_width=True):
                                                         st.session_state.quiz_answers[q["id"]] = i
