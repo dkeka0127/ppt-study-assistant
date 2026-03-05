@@ -75,14 +75,14 @@ def process_ppt(uploaded_file, level, num_questions, include_types):
 
     try:
         # Step 1: Parse PPT
-        status_text.text("PPT 파일 분석 중...")
+        status_text.markdown("### 📄 PPT 파일 분석 중...")
         progress_bar.progress(10)
         slides_data = extract_slide_content(uploaded_file)
         st.session_state.slides_data = slides_data
         progress_bar.progress(30)
 
         # Step 2: Analyze images
-        status_text.text("이미지 분석 중...")
+        status_text.markdown("### 🔍 이미지 분석 중...")
         for slide in slides_data:
             if slide.get("images"):
                 slide_text = "\n".join(slide.get("texts", []))
@@ -92,23 +92,27 @@ def process_ppt(uploaded_file, level, num_questions, include_types):
         progress_bar.progress(50)
 
         # Step 3: Generate summary
-        status_text.text("요약 생성 중...")
+        status_text.markdown("### 📝 요약 생성 중...")
         summary = generate_summary(slides_data, level)
         st.session_state.summary = summary
         progress_bar.progress(70)
 
         # Step 4: Generate quizzes
-        status_text.text("퀴즈 생성 중...")
+        status_text.markdown("### ✍️ 퀴즈 생성 중...")
         quizzes = generate_quizzes(slides_data, level, num_questions, include_types)
         st.session_state.quizzes = quizzes
         progress_bar.progress(90)
 
         # Step 5: Prepare chatbot context
-        status_text.text("AI 튜터 준비 중...")
+        status_text.markdown("### 🤖 AI 튜터 준비 중...")
         st.session_state.ppt_context = format_ppt_for_context(slides_data)
         progress_bar.progress(100)
 
         st.session_state.processed = True
+        progress_bar.progress(100)
+        status_text.markdown("### ✅ 학습 자료 생성 완료!")
+        st.success("🎉 모든 준비가 완료되었습니다! 이제 학습을 시작하세요.")
+        st.balloons()
         status_text.empty()
         progress_bar.empty()
         return True
@@ -170,20 +174,38 @@ if not st.session_state.processed:
             label_visibility="collapsed"
         )
 
-        # Feature preview
+        # Feature preview with enhanced cards
         st.markdown("---")
-        st.markdown("##### 생성되는 학습 자료")
+        st.markdown("##### ✨ 생성되는 학습 자료")
         feat_cols = st.columns(4)
         features = [
-            ("📊 Dashboard", "핵심 요약 & 분석"),
-            ("✍️ Quiz Zone", "맞춤형 퀴즈"),
-            ("📝 Review Note", "오답 노트"),
-            ("🤖 AI Tutor", "실시간 Q&A")
+            ("📊", "Dashboard", "핵심 요약 & 분석", "#667eea"),
+            ("✍️", "Quiz Zone", "맞춤형 퀴즈", "#f093fb"),
+            ("📝", "Review Note", "오답 노트", "#4facfe"),
+            ("🤖", "AI Tutor", "실시간 Q&A", "#43e97b")
         ]
-        for i, (title, desc) in enumerate(features):
+        for i, (icon, title, desc, color) in enumerate(features):
             with feat_cols[i]:
-                st.markdown(f"**{title}**")
-                st.caption(desc)
+                st.markdown(f"""
+                    <div style="
+                        background: linear-gradient(135deg, {color}22 0%, {color}44 100%);
+                        border: 2px solid {color};
+                        border-radius: 12px;
+                        padding: 1.2rem;
+                        text-align: center;
+                        transition: all 0.3s ease;
+                        animation: fadeIn 0.5s ease-out;
+                        animation-delay: {i * 0.1}s;
+                        opacity: 0;
+                        animation-fill-mode: forwards;
+                    ">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; color: #333;">
+                            {title}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #666;">{desc}</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
     with settings_col:
         st.subheader("학습 설정")
@@ -225,7 +247,7 @@ if not st.session_state.processed:
 # 학습 화면 (처리 후)
 # ============================================
 else:
-    # Quick Stats Bar
+    # Quick Stats Bar with enhanced visuals
     total_questions = sum(len(stage.get("questions", [])) for stage in st.session_state.quizzes)
     answered = len(st.session_state.quiz_answers)
     wrong_count = len(st.session_state.wrong_answers)
@@ -233,24 +255,24 @@ else:
 
     stat_cols = st.columns(5)
     with stat_cols[0]:
-        st.metric("슬라이드", f"{len(st.session_state.slides_data)}장")
+        st.metric("📄 슬라이드", f"{len(st.session_state.slides_data)}장")
     with stat_cols[1]:
-        st.metric("총 문제", f"{total_questions}개")
+        st.metric("📝 총 문제", f"{total_questions}개")
     with stat_cols[2]:
-        st.metric("진행률", f"{answered}/{total_questions}")
+        st.metric("⏱️ 진행률", f"{answered}/{total_questions}")
     with stat_cols[3]:
-        st.metric("오답", f"{wrong_count}개")
+        st.metric("❌ 오답", f"{wrong_count}개")
     with stat_cols[4]:
-        st.metric("정답률", f"{accuracy:.0f}%")
+        st.metric("✅ 정답률", f"{accuracy:.0f}%")
 
     st.markdown("---")
 
-    # Main Tabs
+    # Main Tabs with icons
     tab1, tab2, tab3, tab4 = st.tabs([
-        "Dashboard",
-        "Quiz Zone",
-        "Review Note",
-        "AI Tutor"
+        "📊 Dashboard",
+        "✍️ Quiz Zone",
+        "📝 Review Note",
+        "🤖 AI Tutor"
     ])
 
     with tab1:

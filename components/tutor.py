@@ -10,16 +10,19 @@ def render_tutor():
     tutor_left, tutor_right = st.columns([3, 1])
 
     with tutor_right:
-        st.subheader("추천 질문")
+        st.subheader("💡 추천 질문")
+
+        # 추천 질문 아이콘과 함께 표시
         suggested_questions = [
-            "핵심 개념 정리해줘",
-            "시험 포인트 3가지",
-            "쉽게 설명해줘",
-            "예시를 들어줘"
+            ("🎯", "핵심 개념 정리해줘"),
+            ("📝", "시험 포인트 3가지"),
+            ("🔍", "쉽게 설명해줘"),
+            ("💭", "예시를 들어줘")
         ]
 
-        for sq in suggested_questions:
-            if st.button(sq, key=f"suggested_{sq}", use_container_width=True):
+        for icon, sq in suggested_questions:
+            # 커스텀 스타일 버튼
+            if st.button(f"{icon} {sq}", key=f"suggested_{sq}", use_container_width=True):
                 st.session_state.chat_history.append({"role": "user", "content": sq})
                 with st.spinner("답변 생성 중..."):
                     response = get_tutor_response(

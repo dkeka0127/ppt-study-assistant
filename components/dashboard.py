@@ -10,8 +10,25 @@ def render_dashboard():
     dash_left, dash_right = st.columns([2, 1])
 
     with dash_left:
-        st.subheader("전체 요약")
-        st.info(st.session_state.summary.get("one_line", "요약 정보가 없습니다."))
+        st.subheader("📊 전체 요약")
+
+        # 애니메이션 효과를 위한 컨테이너
+        with st.container():
+            st.markdown("""
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 1.5rem;
+                    border-radius: 16px;
+                    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+                    animation: fadeIn 0.6s ease-out;
+                    margin-bottom: 1rem;
+                ">
+                    <div style="font-size: 1.1rem; line-height: 1.6;">
+                        """ + st.session_state.summary.get("one_line", "요약 정보가 없습니다.") + """
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
         # Slide-by-slide Cards
         st.subheader("슬라이드별 분석")
@@ -54,12 +71,39 @@ def render_dashboard():
                         st.caption(f"이미지 {len(slide['images'])}개 포함")
 
     with dash_right:
-        # Keywords section
-        st.subheader("핵심 키워드")
+        # Keywords section with enhanced styling
+        st.subheader("🎯 핵심 키워드")
         keywords = st.session_state.summary.get("keywords", [])
         if keywords:
-            for kw in keywords:
-                st.markdown(f"`{kw}`")
+            for i, kw in enumerate(keywords):
+                # 각 키워드에 다른 그라데이션 적용
+                colors = [
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+                ]
+                color = colors[i % len(colors)]
+                st.markdown(f"""
+                    <div style="
+                        background: {color};
+                        color: white;
+                        padding: 0.8rem 1.2rem;
+                        border-radius: 12px;
+                        margin-bottom: 0.8rem;
+                        font-weight: 600;
+                        text-align: center;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        transition: all 0.3s ease;
+                        animation: slideInRight 0.5s ease-out;
+                        animation-delay: {i * 0.1}s;
+                        opacity: 0;
+                        animation-fill-mode: forwards;
+                    ">
+                        {kw}
+                    </div>
+                """, unsafe_allow_html=True)
         else:
             st.caption("키워드가 없습니다.")
 

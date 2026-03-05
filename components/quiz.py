@@ -16,14 +16,63 @@ def render_quiz():
     current_stage = st.session_state.current_quiz_stage
 
     with progress_col:
-        st.subheader("학습 단계")
+        st.subheader("🎯 학습 단계")
+
+        # 단계별 진행 상황을 시각적으로 표시
         for i, stage in enumerate(stages):
             if i < current_stage:
-                st.success(f"완료: {stage}")
+                # 완료된 단계
+                st.markdown(f"""
+                    <div style="
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                        padding: 1rem;
+                        border-radius: 12px;
+                        margin-bottom: 0.8rem;
+                        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+                        animation: fadeIn 0.5s ease-out;
+                    ">
+                        <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem;">
+                            ✓ {stage}
+                        </div>
+                        <div style="font-size: 0.85rem; opacity: 0.9;">완료</div>
+                    </div>
+                """, unsafe_allow_html=True)
             elif i == current_stage:
-                st.info(f"진행중: {stage}")
+                # 현재 진행 중인 단계
+                st.markdown(f"""
+                    <div style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 1rem;
+                        border-radius: 12px;
+                        margin-bottom: 0.8rem;
+                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                        animation: pulse 2s infinite;
+                    ">
+                        <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem;">
+                            ▶ {stage}
+                        </div>
+                        <div style="font-size: 0.85rem; opacity: 0.9;">진행 중</div>
+                    </div>
+                """, unsafe_allow_html=True)
             else:
-                st.markdown(f"대기: {stage}")
+                # 대기 중인 단계
+                st.markdown(f"""
+                    <div style="
+                        background: #f8f9fa;
+                        color: #6c757d;
+                        padding: 1rem;
+                        border-radius: 12px;
+                        margin-bottom: 0.8rem;
+                        border: 2px dashed #dee2e6;
+                    ">
+                        <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem;">
+                            ○ {stage}
+                        </div>
+                        <div style="font-size: 0.85rem;">대기 중</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
         st.markdown("---")
 
@@ -48,11 +97,53 @@ def render_quiz():
             if not questions:
                 st.info(f"'{stage_data.get('stage', stages[current_stage])}' 단계에 문제가 없습니다.")
             else:
-                # Progress Bar
+                # Enhanced Progress Bar
                 total_q = len(questions)
                 answered_q = sum(1 for q in questions if q["id"] in st.session_state.quiz_answers)
-                st.progress(answered_q / total_q if total_q > 0 else 0)
-                st.caption(f"진행: {answered_q}/{total_q}")
+                progress_percent = (answered_q / total_q * 100) if total_q > 0 else 0
+
+                st.markdown(f"""
+                    <div style="
+                        background: white;
+                        padding: 1rem;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+                        margin-bottom: 1.5rem;
+                    ">
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 0.5rem;
+                        ">
+                            <span style="font-weight: 600; color: #667eea;">진행 상황</span>
+                            <span style="font-weight: 700; color: #667eea;">{answered_q}/{total_q}</span>
+                        </div>
+                        <div style="
+                            height: 16px;
+                            background: #e9ecef;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+                        ">
+                            <div style="
+                                width: {progress_percent}%;
+                                height: 100%;
+                                background: linear-gradient(90deg, #667eea, #764ba2);
+                                border-radius: 8px;
+                                transition: width 0.5s ease-out;
+                                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+                            "></div>
+                        </div>
+                        <div style="
+                            text-align: center;
+                            margin-top: 0.5rem;
+                            font-size: 0.9rem;
+                            color: #6c757d;
+                        ">
+                            {progress_percent:.0f}% 완료
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
                 # Questions in card-style
                 for q in questions:
