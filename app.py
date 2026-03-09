@@ -2,6 +2,7 @@
 
 import streamlit as st
 import os
+import uuid
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -11,6 +12,7 @@ load_dotenv()
 from modules.parser import extract_slide_content
 from modules.generator import generate_summary, generate_quizzes, analyze_image
 from modules.chatbot import format_ppt_for_context
+from modules.chatbot_rag import initialize_rag_chatbot, get_rag_statistics
 
 # Import components
 from components import render_dashboard, render_quiz, render_review, render_tutor
@@ -47,7 +49,10 @@ def init_session_state():
         "level": "대학생",
         "feedback": None,
         "auto_process": True,
-        "show_settings": False
+        "show_settings": False,
+        "rag_initialized": False,
+        "rag_stats": {},
+        "session_id": str(uuid.uuid4())
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -106,6 +111,22 @@ def process_ppt(uploaded_file, level, num_questions, include_types):
         # Step 5: Prepare chatbot context
         status_text.markdown("### 🤖 AI 튜터 준비 중...")
         st.session_state.ppt_context = format_ppt_for_context(slides_data)
+
+        # Step 6: Initialize RAG pipeline (hidden from user)
+        try:
+            rag_success = initialize_rag_chatbot(
+                slides_data=slides_data,
+                collection_name=f"ppt_study_{hash(str(slides_data))}"[-8:],
+                chunk_size=500,
+                chunk_overlap=100
+            )
+            st.session_state.rag_initialized = rag_success
+            if rag_success:
+                st.session_state.rag_stats = get_rag_statistics()
+        except Exception as e:
+            st.session_state.rag_initialized = False
+            print(f"RAG initialization error: {e}")
+
         progress_bar.progress(100)
 
         st.session_state.processed = True
