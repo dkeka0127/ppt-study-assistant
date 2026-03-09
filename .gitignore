@@ -1,9 +1,27 @@
+# Python
 venv/
 .env
 __pycache__/
-data/temp/
-*.pptxvenv/
-.env
-__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS
 .DS_Store
+
+# Data folders
 data/temp/*
+data/chroma_db/
+data/*.json
+
+# PPTX files (optional, remove if you want to track them)
+*.pptx
+
+# bkit related
+.bkit/
+.pdca-status.json
+docs/.bkit-memory.json
+docs/.pdca-snapshots/
+docs/.pdca-status.json
+docs/01-plan/
+docs/02-design/
+docs/03-analysis/
